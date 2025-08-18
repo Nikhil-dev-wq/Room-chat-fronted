@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="NS Studio">
+    <link rel="stylesheet" href="style.css">
+    <title>Room chats</title>
+</head>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<body>
+    <div class="room_id_container">
+        <div class="container">
+            <h1 id="room_id_header">Join Room</h1>
+            <input type="text" placeholder="Enter Room ID" id="room_id_input" />
+            <input type="text" placeholder="Enter Your Name" id="name_input" />
+            <button id="join-btn">Join</button>
+        </div>
+    </div>
+    <div class="main_container">
+        <div class="main_container">
+            <div class="chat_container">
+                <!-- Chat header -->
+                <div class="chat_header">
+                    <h3 id="room_id"></h3>
+                </div>
+
+                <!-- Chat messages -->
+                <div class="chat_messages" id="chat_messages">
+                    <!-- Messages will appear here -->
+                </div>
+
+                <!-- Message input -->
+                <div class="chat_input">
+                    <input type="text" id="message_input" placeholder="Type a message..." />
+                    <button id="send_btn">Send</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>
