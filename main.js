@@ -6,7 +6,7 @@ const nameInput = document.getElementById("name_input");
 let userName = "";
 let isJoined = false
 let Room_data = {};
-const socket = io("https://room-chat-gpxz.onrender.com/");
+const socket = io("https://room-chat-gpxz.onrender.com");
 
 joinButton.onclick = () => {
     const roomId = roomIdInput.value.trim();
