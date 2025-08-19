@@ -1,124 +1,152 @@
-// ======================
-// Elements
-// ======================
-const roomIdInput = document.getElementById("room_id_input");
-const joinButton = document.getElementById("join-btn");
-const roomIdContainer = document.querySelector(".room_id_container");
-const mainContainer = document.querySelector(".main_container");
-const nameInput = document.getElementById("name_input");
-const messageInput = document.getElementById("message_input");
-const sendBtn = document.getElementById("send_btn");
-const chatMessages = document.getElementById("chat_messages");
-const roomIdDisplay = document.getElementById("room_id");
+import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
+const socket = io("http://localhost:5000");
 
-// ======================
-// State
-// ======================
-let userName = "";
-let isJoined = false;
-let Room_data = {};
+// ---------------- DOM ELEMENTS ----------------
+const roomIdInput = document.getElementById("room-id-input");
+const nameInput = document.getElementById("name-input");
+const joinBtn = document.getElementById("join-btn");
+const errorMessage = document.getElementById("error-message");
+const joinContainer = document.querySelector(".join-container");
+const chatContainer = document.querySelector(".chat-room-container");
+const messagesList = document.getElementById("messages");
+const roomNameDisplay = document.getElementById("room-name");
+const messageInput = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+const leaveBtn = document.getElementById("leave-btn");
 
-// ======================
-// Socket.IO Connection
-// ======================
-const socket = io("https://room-chat-gpxz.onrender.com", {
-    transports: ["websocket"], // force WebSocket
-    reconnection: true
-});
+// ---------------- LOCAL STORAGE ----------------
+let savedRoomId = localStorage.getItem("roomId");
+let savedUsername = localStorage.getItem("name");
 
-// ======================
-// Join Room
-// ======================
-joinButton.onclick = () => {
+if (savedRoomId && savedUsername) {
+    roomNameDisplay.innerText = `Room: ${savedRoomId}`;
+}
+
+// ---------------- JOIN ROOM ----------------
+joinBtn.addEventListener("click", () => {
     const roomId = roomIdInput.value.trim();
-    const name = nameInput.value.trim();
-    userName = name;
+    const username = nameInput.value.trim();
 
-    if (!roomId || !name) {
-        alert("Room ID and Name cannot be empty!");
+    if (!roomId) {
+        errorMessage.innerText = "Enter Room ID!";
+        return;
+    }
+    if (!username) {
+        errorMessage.innerText = "Enter Name!";
         return;
     }
 
-    fetch("https://room-chat-gpxz.onrender.com/api/room_id", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room_id: roomId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        isJoined = true;
-        Room_data = data.Room;
-        roomIdDisplay.textContent = `Room ID: ${Room_data.room_id}`;
-        toggleUI();
-        socket.emit("join_room", { room_id: Room_data.room_id, user: userName });
-    })
-    .catch(err => console.error("Failed to join room:", err));
-};
+    // Clear inputs
+    roomIdInput.value = "";
+    nameInput.value = "";
 
-// ======================
-// Toggle UI
-// ======================
-function toggleUI() {
-    if (isJoined) {
-        roomIdContainer.style.display = "none";
-        mainContainer.style.display = "flex";
-        loadOldChats();
+    socket.emit("joinRoom", roomId, username);
+});
+
+// User joins room notification
+socket.on("userJoin", (username) => {
+    const li = document.createElement("li");
+    li.classList.add("info-message");
+    li.innerText = `${username} has joined the room!`;
+    messagesList.appendChild(li);
+});
+
+// Confirmation of joining room
+socket.on("joinedRoom", (roomId, username) => {
+    localStorage.setItem("joined", "true");
+    localStorage.setItem("name", username);
+    localStorage.setItem("roomId", roomId);
+
+    const li = document.createElement("li");
+    li.classList.add("info-message");
+    li.innerText = `You joined the room!`;
+    messagesList.appendChild(li);
+
+    updateContainerDisplay();
+});
+
+// ---------------- UPDATE UI ----------------
+function updateContainerDisplay() {
+    if (localStorage.getItem("joined") === "true") {
+        joinContainer.style.display = "none";
+        chatContainer.style.display = "flex";
+        roomNameDisplay.innerText = `Room: ${localStorage.getItem("roomId")}`;
     } else {
-        roomIdContainer.style.display = "flex";
-        mainContainer.style.display = "none";
-        Room_data = {};
+        joinContainer.style.display = "flex";
+        chatContainer.style.display = "none";
     }
 }
 
-// Initial check
-toggleUI();
+updateContainerDisplay();
 
-// ======================
-// Send Message
-// ======================
-sendBtn.addEventListener("click", sendMessage);
-messageInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
-});
+// ---------------- SEND MESSAGE ----------------
+sendBtn.addEventListener("click", () => {
+    const message = messageInput.value.trim();
+    if (!message) return;
 
-function sendMessage() {
-    const msg = messageInput.value.trim();
-    if (!msg) return;
+    const username = localStorage.getItem("name");
+    const roomId = localStorage.getItem("roomId");
 
-    socket.emit("send_message", { room_id: Room_data.room_id, user: userName, message: msg });
+    socket.emit("messages", username, message, roomId);
+
+    const li = document.createElement("li");
+    li.classList.add("message", "me");
+    li.innerText = `You: ${message}`;
+    messagesList.appendChild(li);
+
     messageInput.value = "";
-}
-
-// ======================
-// Receive Messages
-// ======================
-socket.on("receive_message", data => {
-    addMessage(data.user, data.message);
 });
 
-// ======================
-// Load Old Chats
-// ======================
-function loadOldChats() {
-    if (!Room_data.chats) return;
-    Room_data.chats.forEach(chat => addMessage(chat.user, chat.message));
-}
+const typingIndicator = document.getElementById("typing");
 
-// ======================
-// Add Message Helper
-// ======================
-function addMessage(user, message) {
-    const msgDiv = document.createElement("div");
-    msgDiv.textContent = `${user}: ${message}`;
-    msgDiv.classList.add("message");
+// Show typing indicator when someone is typing
+socket.on("typing", (username) => {
+    typingIndicator.style.display = "inline-block";
+    typingIndicator.innerText = `${username} is typing`;
+    
+    // Hide after 2 seconds if no further typing event
+    clearTimeout(typingIndicator.timeout);
+    typingIndicator.timeout = setTimeout(() => {
+        typingIndicator.style.display = "none";
+    }, 1000);
+});
 
-    if (user === userName) {
-        msgDiv.classList.add("self");
-    } else {
-        msgDiv.classList.add("other");
-    }
+// Emit typing event when user types
+messageInput.addEventListener("input", () => {
+    const username = localStorage.getItem("name");
+    const roomId = localStorage.getItem("roomId");
+    socket.emit("typing", username, roomId);
+});
 
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+// Receive messages
+socket.on("messages", (username, message) => {
+    const li = document.createElement("li");
+    li.classList.add("message");
+    li.innerText = `${username}: ${message}`;
+    messagesList.appendChild(li);
+});
+
+// ---------------- LEAVE ROOM ----------------
+leaveBtn.addEventListener("click", () => {
+    socket.emit("leave", savedUsername, savedRoomId)
+    localStorage.setItem("joined", "false");
+    localStorage.removeItem("name");
+    localStorage.removeItem("roomId");
+    updateContainerDisplay();
+});
+
+socket.on("leave", username => {
+    const li = document.createElement("li");
+    li.classList.add("info-message");
+    li.innerText = `${username} has left the room!`;
+    messagesList.appendChild(li);
+})
+
+// ---------------- AUTO JOIN IF ALREADY IN ROOM ----------------
+if (localStorage.getItem("joined") === "true") {
+    const roomId = localStorage.getItem("roomId");
+    const username = localStorage.getItem("name");
+    socket.emit("joinRoom", roomId, username);
 }
 
