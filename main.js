@@ -1,5 +1,5 @@
 import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
-const socket = io("http://localhost:5000");
+const socket = io("https://chat-backend-mmf7.onrender.com");
 
 // ---------------- DOM ELEMENTS ----------------
 const roomIdInput = document.getElementById("room-id-input");
