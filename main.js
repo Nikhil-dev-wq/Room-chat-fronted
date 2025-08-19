@@ -129,7 +129,9 @@ socket.on("messages", (username, message) => {
 
 // ---------------- LEAVE ROOM ----------------
 leaveBtn.addEventListener("click", () => {
-    socket.emit("userLeave", savedUsername, savedRoomId);
+    const username = localStorage.getItem("name");
+    const roomId = localStorage.getItem("roomId");
+    socket.emit("userLeave", username, roomId);
     localStorage.setItem("joined", "false");
     localStorage.removeItem("name");
     localStorage.removeItem("roomId");
