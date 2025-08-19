@@ -1,5 +1,5 @@
 import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
-const socket = io("https://chat-backend-mmf7.onrender.com");
+const socket = io("http://localhost:5000");
 
 // ---------------- DOM ELEMENTS ----------------
 const roomIdInput = document.getElementById("room-id-input");
@@ -52,10 +52,27 @@ socket.on("userJoin", (username) => {
 });
 
 // Confirmation of joining room
-socket.on("joinedRoom", (roomId, username) => {
+socket.on("joinedRoom", (roomId, username, roomData) => {
     localStorage.setItem("joined", "true");
     localStorage.setItem("name", username);
     localStorage.setItem("roomId", roomId);
+
+    let messages = roomData.messages;
+    if (messages) {
+        messages.forEach(element => {
+            const li = document.createElement("li");
+            const username = localStorage.getItem("name");
+            if (element.name == username) {
+                li.classList.add("message", "me");
+                li.innerText = `You: ${element.message}`;
+                messagesList.appendChild(li);
+            } else {
+                li.classList.add("message");
+                li.innerText = `${element.name}: ${element.message}`;
+                messagesList.appendChild(li);
+            }
+        });
+    }
 
     const li = document.createElement("li");
     li.classList.add("info-message");
@@ -63,7 +80,15 @@ socket.on("joinedRoom", (roomId, username) => {
     messagesList.appendChild(li);
 
     updateContainerDisplay();
+
+
+
 });
+
+// Error handling 
+socket.on("error", err => {
+    errorMessage.innerHTML = err;
+})
 
 // ---------------- UPDATE UI ----------------
 function updateContainerDisplay() {
@@ -97,13 +122,20 @@ sendBtn.addEventListener("click", () => {
     messageInput.value = "";
 });
 
+// Allow sending message with Enter key
+document.getElementById('message-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        document.getElementById('send-btn').click();
+    }
+});
+
 const typingIndicator = document.getElementById("typing");
 
 // Show typing indicator when someone is typing
 socket.on("typing", (username) => {
     typingIndicator.style.display = "inline-block";
     typingIndicator.innerText = `${username} is typing`;
-    
+
     // Hide after 2 seconds if no further typing event
     clearTimeout(typingIndicator.timeout);
     typingIndicator.timeout = setTimeout(() => {
@@ -135,6 +167,7 @@ leaveBtn.addEventListener("click", () => {
     localStorage.setItem("joined", "false");
     localStorage.removeItem("name");
     localStorage.removeItem("roomId");
+    location.reload();
     updateContainerDisplay();
 });
 
@@ -145,10 +178,47 @@ socket.on("userLeave", username => {
     messagesList.appendChild(li);
 });
 
+
 // ---------------- AUTO JOIN IF ALREADY IN ROOM ----------------
 if (localStorage.getItem("joined") === "true") {
     const roomId = localStorage.getItem("roomId");
     const username = localStorage.getItem("name");
-    socket.emit("joinRoom", roomId, username);
+    socket.emit("online", username, roomId);
 }
+
+
+socket.on("online", (username)=> {
+    let li = document.createElement("li");
+    li.classList.add("info-message");
+    li.innerText = `${username} came online!`;
+    messagesList.appendChild(li);
+
+})
+
+socket.on("offline", username => {
+    const li = document.createElement("li");
+    li.classList.add("info-message");
+    li.innerText = `${username} has gone offline!`;
+    messagesList.appendChild(li);
+})
+
+// -------- getMessagesData --------
+socket.on("roomData", roomData => {
+    let messages = roomData.messages;
+    if (messages) {
+        messages.forEach(element => {
+            const li = document.createElement("li");
+            const username = localStorage.getItem("name");
+            if (element.name == username) {
+                li.classList.add("message", "me");
+                li.innerText = `You: ${element.message}`;
+                messagesList.appendChild(li);
+            } else {
+                li.classList.add("message");
+                li.innerText = `${element.name}: ${element.message}`;
+                messagesList.appendChild(li);
+            }
+        });
+    }
+})
 
