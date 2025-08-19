@@ -5,42 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaChat - Free Chat Without Login | Real-time Chat Rooms</title>
     <meta name="description" content="NexaChat is a free real-time chat app. Join chat rooms instantly without login, send messages, and connect with friends instantly.">
-  <!-- Keywords (not very important now, but safe to add) -->
-  <meta name="keywords" content="free chat, chat without login, chat app, real-time chat, group chat, NexaChat">
-    
-    <!-- Link to external CSS -->
+    <!-- Keywords (not very important now, but safe to add) -->
+    <meta name="keywords" content="free chat, chat without login, chat app, real-time chat, group chat, NexaChat">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Socket.IO library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js"></script>
 </head>
 <body>
-
-    <!-- Room Join Section -->
-    <div class="join-container">
-        <h1>Join a Chat Room</h1>
-        <input type="text" id="room-id-input" placeholder="Enter Room ID">
-        <input type="text" id="name-input" placeholder="Enter Your Name">
-        <button id="join-btn">Join Room</button>
-        <p id="join-error" class="error-message"></p> <!-- Error messages appear here -->
+    <!-- Join Room Section -->
+    <div class="container join-container" id="join-container">
+        <h1>Join Chat Room</h1>
+        <div class="form-group">
+            <input type="text" id="name-input" class="input-field" placeholder="Your Name">
+        </div>
+        <div class="form-group">
+            <input type="text" id="room-id-input" class="input-field" placeholder="Room ID">
+        </div>
+        <div class="form-group">
+            <button id="join-btn" class="btn btn-primary">
+                <span class="icon">login</span>
+                Join Room
+            </button>
+        </div>
+        <div id="error-message"></div>
     </div>
 
     <!-- Chat Room Section -->
-    <div class="chat-room-container">
-        <button id="leave-btn">Leave Room</button>
-        <h1 id="room-name">Room Name</h1>
-
-        <!-- Messages Display -->
+    <div class="container chat-room-container" id="chat-room-container" style="display: none;">
+        <div class="chat-header">
+            <h1 id="room-name">Room Name</h1>
+            <button id="leave-btn" class="btn btn-danger" style="width: auto; padding: 0 20px;">
+                <span class="icon">logout</span>
+                Leave
+            </button>
+        </div>
+        
         <ul id="messages"></ul>
-
-        <!-- Message Input -->
-         <p id="typing">Nikhil is typing</p>
-        <input type="text" id="message-input" placeholder="Type your message here...">
-        <button id="send-btn">Send</button>
+        
+        <div id="typing"></div>
+        
+        <div class="chat-input-container">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-btn">
+                <span class="icon">send</span>
+            </button>
+        </div>
     </div>
 
-    <!-- Main JavaScript file -->
-    <script type="module" src="main.js"></script>
-
+    <script src="main.js" type="module">
+         
+    </script>
 </body>
 </html>
