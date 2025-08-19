@@ -129,19 +129,19 @@ socket.on("messages", (username, message) => {
 
 // ---------------- LEAVE ROOM ----------------
 leaveBtn.addEventListener("click", () => {
-    socket.emit("leave", savedUsername, savedRoomId)
+    socket.emit("userLeave", savedUsername, savedRoomId);
     localStorage.setItem("joined", "false");
     localStorage.removeItem("name");
     localStorage.removeItem("roomId");
     updateContainerDisplay();
 });
 
-socket.on("leave", username => {
+socket.on("userLeave", username => {
     const li = document.createElement("li");
     li.classList.add("info-message");
     li.innerText = `${username} has left the room!`;
     messagesList.appendChild(li);
-})
+});
 
 // ---------------- AUTO JOIN IF ALREADY IN ROOM ----------------
 if (localStorage.getItem("joined") === "true") {
